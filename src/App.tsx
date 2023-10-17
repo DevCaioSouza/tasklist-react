@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function App() {
   const [tasks, setTasks] = useState<string[]>([]);
@@ -8,6 +8,15 @@ export default function App() {
     enabled: false,
     task: '',
   });
+
+  useEffect(() => {
+    const savedTasks = localStorage.getItem('@cursoreact');
+
+    console.log(savedTasks);
+    if (savedTasks) {
+      setTasks(JSON.parse(savedTasks));
+    }
+  }, []);
 
   function addTask() {
     if (!input) {
@@ -19,16 +28,19 @@ export default function App() {
       handleSaveEdit();
       return;
     }
+
     setTasks((tarefas) => [...tarefas, input]);
     setInput('');
+
+    localStorage.setItem('@cursoreact', JSON.stringify([...tasks, input]));
   }
 
   function handleSaveEdit() {
     const findTaskIndex = tasks.findIndex((task) => task === editedTask.task);
     const allTasks = [...tasks]; //forma correta de manipular useStates
 
-    allTasks[findTaskIndex] = input;
-    setTasks(allTasks);
+    allTasks[findTaskIndex] = input; //Método usado p/ sobrescrever o valor do elemento no Array
+    setTasks(allTasks); //Aqui é o tasks porém contendo a task editada
 
     setEditedTask({
       enabled: false,
@@ -36,11 +48,15 @@ export default function App() {
     });
 
     setInput('');
+
+    localStorage.setItem('@cursoreact', JSON.stringify(allTasks));
   }
 
   function deleteTask(item: string) {
     const removeTask = tasks.filter((task) => task !== item);
     setTasks(removeTask);
+
+    localStorage.setItem('@cursoreact', JSON.stringify(removeTask));
   }
 
   function editTask(item: string) {
@@ -58,12 +74,9 @@ export default function App() {
         value={input}
         onChange={(e) => setInput(e.target.value)}
       />
-
       <button onClick={addTask}>
-        {editedTask.enabled ? "Confirmar edição" : "Adicionar tarefa"}
+        {editedTask.enabled ? 'Confirmar edição' : 'Adicionar tarefa'}
       </button>
-
-
       {/* <button onClick={addTask}>Adicionar</button> */}
       <h1>Lista de tarefas: </h1> <hr /> <br />
       {tasks.map((item, index) => (
