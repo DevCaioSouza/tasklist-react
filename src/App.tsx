@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export default function App() {
   const [tasks, setTasks] = useState<string[]>([]);
@@ -9,6 +9,9 @@ export default function App() {
     task: '',
   });
 
+  const inputRef = useRef<HTMLInputElement>(null);
+  const firstRender = useRef(true);
+
   useEffect(() => {
     const savedTasks = localStorage.getItem('@cursoreact');
 
@@ -17,6 +20,18 @@ export default function App() {
       setTasks(JSON.parse(savedTasks));
     }
   }, []);
+
+  useEffect(() => {
+    // mecanismo lógico que resulta em: toda vez que a página é carregada essa 
+    // chave muda de true p/ false, permitindo que seja rodado o comando de salvar o 
+    // tasks em local storage
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+
+    localStorage.setItem('@cursoreact', JSON.stringify(tasks));
+  }, [tasks]);
 
   function addTask() {
     if (!input) {
@@ -31,8 +46,6 @@ export default function App() {
 
     setTasks((tarefas) => [...tarefas, input]);
     setInput('');
-
-    localStorage.setItem('@cursoreact', JSON.stringify([...tasks, input]));
   }
 
   function handleSaveEdit() {
@@ -48,18 +61,16 @@ export default function App() {
     });
 
     setInput('');
-
-    localStorage.setItem('@cursoreact', JSON.stringify(allTasks));
   }
 
   function deleteTask(item: string) {
     const removeTask = tasks.filter((task) => task !== item);
     setTasks(removeTask);
-
-    localStorage.setItem('@cursoreact', JSON.stringify(removeTask));
   }
 
   function editTask(item: string) {
+    inputRef.current?.focus();
+
     setInput(item);
     setEditedTask({
       enabled: true,
@@ -73,6 +84,7 @@ export default function App() {
         placeholder="Digite uma tarefa nova"
         value={input}
         onChange={(e) => setInput(e.target.value)}
+        ref={inputRef}
       />
       <button onClick={addTask}>
         {editedTask.enabled ? 'Confirmar edição' : 'Adicionar tarefa'}
